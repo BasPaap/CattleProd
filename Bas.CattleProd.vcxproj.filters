@@ -21,5 +21,14 @@
     <ClInclude Include="__vm\.Bas.CattleProd.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="__vm\.CattleProd.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="humSound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zapSound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
