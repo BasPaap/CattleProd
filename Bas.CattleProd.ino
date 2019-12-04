@@ -10,6 +10,8 @@
 #define SAMPLE_RATE 8000;
 
 const int triggerButtonPin = 2;
+const int probeButtonPin = 3;
+const int arcLedPin = 10;
 const int speakerPin = 11;  // Can be either 3 or 11, two PWM outputs connected to Timer 2
 
 volatile uint16_t sample;
@@ -19,8 +21,12 @@ int sounddata_length = 0;
 int lastTriggerButtonState = HIGH;   // the previous reading from the input pin
 unsigned long lastTriggerButtonDebounceTime = 0;  // the last time the output pin was toggled
 int triggerButtonState = HIGH;             // the current reading from the input pin
+int lastProbeButtonState = HIGH;   // the previous reading from the input pin
+unsigned long lastProbeButtonDebounceTime = 0;  // the last time the output pin was toggled
+int probeButtonState = HIGH;             // the current reading from the input pin
 unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 bool isAudioLooping = false;
+bool isHumRunning = false;
 
 // The setup() function runs once each time the micro-controller starts
 void setup()
@@ -33,6 +39,7 @@ void setup()
 void loop()
 {
 	readTriggerButton();
+	readProbeButton();
 }
 
 void readTriggerButton()
@@ -61,6 +68,7 @@ void readTriggerButton()
 			if (triggerButtonState == LOW)
 			{
 				// The button is pressed, so keep looping the loop sound while pressed
+				isHumRunning = true;
 				isAudioLooping = true;
 				startPlayback(humSound, sizeof(humSound));
 			}
@@ -68,12 +76,55 @@ void readTriggerButton()
 			{
 				// The button has been released, so stop the sound.
 				isAudioLooping = false;
+				isHumRunning = false;
 			}
 		}
 	}
 
 	// save the reading. Next time through the loop, it'll be the lastButtonState:
 	lastTriggerButtonState = reading;
+}
+
+
+void readProbeButton()
+{
+	// read the state of the switch into a local variable:
+	int reading = digitalRead(probeButtonPin);
+
+	// check to see if you just pressed the button
+	// (i.e. the input went from LOW to HIGH), and you've waited long enough
+	// since the last press to ignore any noise:
+
+	// If the switch changed, due to noise or pressing:
+	if (reading != lastProbeButtonState) {
+		// reset the debouncing timer
+		lastProbeButtonDebounceTime = millis();
+	}
+
+	if ((millis() - lastProbeButtonDebounceTime) > debounceDelay) {
+		// whatever the reading is at, it's been there for longer than the debounce
+		// delay, so take it as the actual current state:
+		bool isButtonStateChanged = reading != probeButtonState;
+		probeButtonState = reading;
+
+		// If the button state has changed:
+		if (isButtonStateChanged) {
+			if (probeButtonState == LOW)
+			{
+				if (isHumRunning)
+				{
+					// The button is pressed, so start zapping.					
+				}
+			}
+			else
+			{
+				// The button has been released, so stop zapping.
+			}
+		}
+	}
+
+	// save the reading. Next time through the loop, it'll be the lastButtonState:
+	lastProbeButtonState = reading;
 }
 
 void stopPlayback()
