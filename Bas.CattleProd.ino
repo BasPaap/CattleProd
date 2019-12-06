@@ -160,18 +160,7 @@ ISR(TIMER1_COMPA_vect) {
 
 	if (isAudioLooping && sample >= sounddata_length)
 	{
-		if (sample == sounddata_length + lastSample) {
 			sample = 0;
-		}
-		else {
-			if (speakerPin == 11) {
-				// Ramp down to zero to reduce the click at the end of playback.
-				OCR2A = sounddata_length + lastSample - sample;
-			}
-			else {
-				OCR2B = sounddata_length + lastSample - sample;
-			}
-		}
 	}
 	else
 	{
