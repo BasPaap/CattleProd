@@ -33,6 +33,9 @@ void setup()
 {
 	Serial.begin(9600);
 
+	pinMode(arcLedPin, OUTPUT);
+	pinMode(triggerButtonPin, INPUT_PULLUP);
+	pinMode(probeButtonPin, INPUT_PULLUP);
 }
 
 // Add the main program code into the continuous loop() function
@@ -77,6 +80,7 @@ void readTriggerButton()
 				// The button has been released, so stop the sound.
 				isAudioLooping = false;
 				isHumRunning = false;
+				stopPlayback();
 			}
 		}
 	}
@@ -113,18 +117,28 @@ void readProbeButton()
 			{
 				if (isHumRunning)
 				{
-					// The button is pressed, so start zapping.					
+					// The button is pressed, so start zapping.			
+					switchToSound(zapSound, sizeof(zapSound));
 				}
 			}
 			else
 			{
 				// The button has been released, so stop zapping.
+				switchToSound(humSound, sizeof(humSound));
 			}
 		}
 	}
 
 	// save the reading. Next time through the loop, it'll be the lastButtonState:
 	lastProbeButtonState = reading;
+}
+
+void switchToSound(unsigned char const* data, int length)
+{
+	sounddata_data = data;
+	sounddata_length = length;
+	lastSample = pgm_read_byte(&sounddata_data[sounddata_length - 1]);
+	sample = 0;
 }
 
 void stopPlayback()
