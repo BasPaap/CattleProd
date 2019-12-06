@@ -11,7 +11,7 @@
 
 const int triggerButtonPin = 2;
 const int probeButtonPin = 3;
-const int arcLedPin = 10;
+const int arcLedPin = 5;
 const int speakerPin = 11;  // Can be either 3 or 11, two PWM outputs connected to Timer 2
 
 volatile uint16_t sample;
@@ -33,7 +33,6 @@ void setup()
 {
 	Serial.begin(9600);
 
-	pinMode(arcLedPin, OUTPUT);
 	pinMode(triggerButtonPin, INPUT_PULLUP);
 	pinMode(probeButtonPin, INPUT_PULLUP);
 }
