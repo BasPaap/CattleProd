@@ -27,6 +27,14 @@ int probeButtonState = HIGH;             // the current reading from the input p
 unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 bool isAudioLooping = false;
 bool isHumRunning = false;
+bool isZapping = false;
+
+bool arcLedIsHigh = false;
+const int minArcLedIntensity = 0;
+const int maxArcLedIntensity = 127;
+const long minMillisecondsBetweenArcs = 50;
+long timeSinceLastArc = 0;
+
 
 // The setup() function runs once each time the micro-controller starts
 void setup()
@@ -34,7 +42,7 @@ void setup()
 	Serial.begin(9600);
 
 	pinMode(triggerButtonPin, INPUT_PULLUP);
-	pinMode(probeButtonPin, INPUT_PULLUP);
+	pinMode(probeButtonPin, INPUT_PULLUP);	
 }
 
 // Add the main program code into the continuous loop() function
@@ -42,6 +50,22 @@ void loop()
 {
 	readTriggerButton();
 	readProbeButton();
+
+	if (isHumRunning)
+	{
+		if (millis() - timeSinceLastArc > minMillisecondsBetweenArcs)
+		{
+			int intensity = arcLedIsHigh ? minArcLedIntensity : maxArcLedIntensity;
+			intensity += isZapping ? 128 : 0;
+			arcLedIsHigh = !arcLedIsHigh;
+			analogWrite(arcLedPin, intensity);
+			timeSinceLastArc = millis();
+		}
+	}
+	else
+	{
+		analogWrite(arcLedPin, 0);
+	}
 }
 
 void readTriggerButton()
@@ -117,12 +141,14 @@ void readProbeButton()
 				if (isHumRunning)
 				{
 					// The button is pressed, so start zapping.			
+					isZapping = true;
 					switchToSound(zapSound, sizeof(zapSound));
 				}
 			}
 			else
 			{
 				// The button has been released, so stop zapping.
+				isZapping = false;
 				switchToSound(humSound, sizeof(humSound));
 			}
 		}
