@@ -56,7 +56,7 @@ void loop()
 		if (millis() - timeSinceLastArc > minMillisecondsBetweenArcs)
 		{
 			int intensity = arcLedIsHigh ? minArcLedIntensity : maxArcLedIntensity;
-			intensity += isZapping ? 128 : 0;
+			intensity += isZapping ? 255 - maxArcLedIntensity : 0;
 			arcLedIsHigh = !arcLedIsHigh;
 			analogWrite(arcLedPin, intensity);
 			timeSinceLastArc = millis();
