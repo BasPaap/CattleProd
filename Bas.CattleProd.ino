@@ -9,10 +9,12 @@
 
 #define SAMPLE_RATE 8000;
 
-const int triggerButtonPin = 2;
+const int triggerButtonPin = 7;
 const int probeButtonPin = 3;
 const int arcLedPin = 5;
+const int statusLedPin = 9;
 const int speakerPin = 11;  // Can be either 3 or 11, two PWM outputs connected to Timer 2
+const int smokeRelayPin = 12;
 
 volatile uint16_t sample;
 byte lastSample;
@@ -26,8 +28,8 @@ unsigned long lastProbeButtonDebounceTime = 0;  // the last time the output pin 
 int probeButtonState = HIGH;             // the current reading from the input pin
 unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
 bool isAudioLooping = false;
-bool isHumRunning = false;
-bool isZapping = false;
+bool isTriggerButtonDown = false;
+bool isProbeButtonDown = false;
 
 bool arcLedIsHigh = false;
 const int minArcLedIntensity = 0;
@@ -43,6 +45,11 @@ void setup()
 
 	pinMode(triggerButtonPin, INPUT_PULLUP);
 	pinMode(probeButtonPin, INPUT_PULLUP);	
+	pinMode(statusLedPin, OUTPUT);
+	pinMode(smokeRelayPin, OUTPUT);
+
+	digitalWrite(smokeRelayPin, LOW);	// Ensure the smoke machine is off.
+	digitalWrite(statusLedPin, HIGH);	// Turn on the status LED to signal the cattle prod being ready.
 }
 
 // Add the main program code into the continuous loop() function
@@ -51,12 +58,12 @@ void loop()
 	readTriggerButton();
 	readProbeButton();
 
-	if (isHumRunning)
+	if (isTriggerButtonDown)
 	{
 		if (millis() - timeSinceLastArc > minMillisecondsBetweenArcs)
 		{
 			int intensity = arcLedIsHigh ? minArcLedIntensity : maxArcLedIntensity;
-			intensity += isZapping ? 255 - maxArcLedIntensity : 0;
+			intensity += isProbeButtonDown ? 255 - maxArcLedIntensity : 0;
 			arcLedIsHigh = !arcLedIsHigh;
 			analogWrite(arcLedPin, intensity);
 			timeSinceLastArc = millis();
@@ -94,15 +101,24 @@ void readTriggerButton()
 			if (triggerButtonState == LOW)
 			{
 				// The button is pressed, so keep looping the loop sound while pressed
-				isHumRunning = true;
+				isTriggerButtonDown = true;
 				isAudioLooping = true;
-				startPlayback(humSound, sizeof(humSound));
+				
+				
+				if (isProbeButtonDown)
+				{
+					startPlayback(zapSound, sizeof(zapSound));
+				}
+				else
+				{
+					startPlayback(humSound, sizeof(humSound));
+				}
 			}
 			else
 			{
 				// The button has been released, so stop the sound.
 				isAudioLooping = false;
-				isHumRunning = false;
+				isTriggerButtonDown = false;
 				stopPlayback();
 			}
 		}
@@ -138,17 +154,19 @@ void readProbeButton()
 		if (isButtonStateChanged) {
 			if (probeButtonState == LOW)
 			{
-				if (isHumRunning)
+				isProbeButtonDown = true;
+				
+				if (isTriggerButtonDown)
 				{
-					// The button is pressed, so start zapping.			
-					isZapping = true;
+					digitalWrite(smokeRelayPin, HIGH); // Turn on the smoke machine
 					switchToSound(zapSound, sizeof(zapSound));
 				}
 			}
 			else
 			{
 				// The button has been released, so stop zapping.
-				isZapping = false;
+				isProbeButtonDown = false;
+				digitalWrite(smokeRelayPin, LOW); // Turn off the smoke machine
 				switchToSound(humSound, sizeof(humSound));
 			}
 		}
