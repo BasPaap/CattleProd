@@ -12,7 +12,7 @@
 const int triggerButtonPin = 7;
 const int probeButtonPin = 3;
 const int arcLedPin = 5;
-const int statusLedPin = 9;
+const int statusLedPin = 4;
 const int speakerPin = 11;  // Can be either 3 or 11, two PWM outputs connected to Timer 2
 const int smokeRelayPin = 12;
 
@@ -103,7 +103,6 @@ void readTriggerButton()
 				// The button is pressed, so keep looping the loop sound while pressed
 				isTriggerButtonDown = true;
 				isAudioLooping = true;
-				
 				
 				if (isProbeButtonDown)
 				{
